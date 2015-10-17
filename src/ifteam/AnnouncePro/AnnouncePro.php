@@ -9,6 +9,7 @@ use pocketmine\command\Command;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat;
 use pocketmine\command\PluginCommand;
+use pocketmine\Player;
 
 class AnnouncePro extends PluginBase implements Listener {
 	public $config, $configData;
@@ -134,8 +135,18 @@ class AnnouncePro extends PluginBase implements Listener {
 		if (count ( $this->configData ["announce"] ) > 3) while ( $rand == $this->before )
 			$rand = rand ( 0, count ( $this->configData ["announce"] ) - 1 );
 		$this->before = $rand;
-		if (isset ( $rand )) if (isset ( $this->configData ["announce"] [$rand] )) foreach ( $this->getServer ()->getOnlinePlayers () as $player )
-			$player->sendMessage ( $this->configData ["prefix"] . " " . $this->configData ["announce"] [$rand] . " " . $this->configData ["suffix"] );
+		if (isset ( $rand )) if (isset ( $this->configData ["announce"] [$rand] )) foreach ( $this->getServer ()->getOnlinePlayers () as $player ){
+			$text = $this->configData ["prefix"] . " " . $this->configData ["announce"] [$rand] . " " . $this->configData ["suffix"];
+			$this->sendLongPopup($player, $text);
+		}
+	}
+	public function sendLongPopup(Player $player, string $text){
+		$player->sendPopup($text);
+		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 10);
+		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 20);
+		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 30);
+		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 40);
+		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 50);
 	}
 	public function replaceColor($text) {
 		for($i = 0; $i <= 9; $i ++)
