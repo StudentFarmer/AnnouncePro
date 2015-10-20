@@ -8,7 +8,7 @@ use pocketmine\Player;
 class LongPopupTask extends PluginTask {
 	private $string;
 	private $player;
-	public function __construct(AnnouncePro $owner, Player $player, string $text) {
+	public function __construct(AnnouncePro $owner, Player $player, $text) {
 		parent::__construct ( $owner );
 		$this->string = $text;
 		$this->player = $player;

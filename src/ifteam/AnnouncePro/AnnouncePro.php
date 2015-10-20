@@ -140,7 +140,7 @@ class AnnouncePro extends PluginBase implements Listener {
 			$this->sendLongPopup($player, $text);
 		}
 	}
-	public function sendLongPopup(Player $player, string $text){
+	public function sendLongPopup(Player $player, $text){
 		$player->sendPopup($text);
 		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 10);
 		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 20);
