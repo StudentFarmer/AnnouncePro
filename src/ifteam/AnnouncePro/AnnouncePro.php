@@ -9,10 +9,10 @@ use pocketmine\command\Command;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat;
 use pocketmine\command\PluginCommand;
-use pocketmine\Player;
 
 class AnnouncePro extends PluginBase implements Listener {
 	public $config, $configData;
+	public $announceSystem;
 	public $callback, $before = 1;
 	public function onEnable() {
 		@mkdir ( $this->getDataFolder () );
@@ -20,9 +20,17 @@ class AnnouncePro extends PluginBase implements Listener {
 		$this->initMessage ();
 		$this->registerCommand ( $this->get ( "commands-announce" ), "AnnouncePro", "announcepro" );
 		
-		$this->config = new Config ( $this->getDataFolder () . "announce.yml", Config::YAML, [ "enable" => true,"repeat-second" => 5,"prefix" => $this->get ( "default-prefix" ),"suffix" => "","announce" => [ ] ] );
+		$this->config = new Config ( $this->getDataFolder () . "announce.yml", Config::YAML, [ 
+				"enable" => true,
+				"repeat-second" => 5,
+				"prefix" => $this->get ( "default-prefix" ),
+				"suffix" => "",
+				"announce" => [ ] 
+		] );
 		$this->configData = $this->config->getAll ();
 		$this->callback = $this->getServer ()->getScheduler ()->scheduleRepeatingTask ( new AnnounceProTask ( $this ), $this->configData ["repeat-second"] * 20 );
+		
+		$this->announceSystem = new AnnounceSystem ();
 		
 		$this->getServer ()->getPluginManager ()->registerEvents ( $this, $this );
 	}
@@ -130,23 +138,28 @@ class AnnouncePro extends PluginBase implements Listener {
 		return true;
 	}
 	public function AnnouncePro() {
-		if ($this->configData ["enable"] != true) return;
-		if (isset ( $this->configData ["announce"] )) $rand = rand ( 0, count ( $this->configData ["announce"] ) - 1 );
-		if (count ( $this->configData ["announce"] ) > 3) while ( $rand == $this->before )
+		if ($this->configData ["enable"] != true)
+			return;
+		if (count ( $this->configData ["announce"] ) == 0)
+			return;
+		if (isset ( $this->configData ["announce"] ))
 			$rand = rand ( 0, count ( $this->configData ["announce"] ) - 1 );
-		$this->before = $rand;
-		if (isset ( $rand )) if (isset ( $this->configData ["announce"] [$rand] )) foreach ( $this->getServer ()->getOnlinePlayers () as $player ){
-			$text = $this->configData ["prefix"] . " " . $this->configData ["announce"] [$rand] . " " . $this->configData ["suffix"];
-			$this->sendLongPopup($player, $text);
+		if (count ( $this->configData ["announce"] ) > 3) {
+			$i = 0;
+			while ( $rand == $this->before ) {
+				$i ++;
+				if ($i == 5)
+					break;
+				$rand = rand ( 0, count ( $this->configData ["announce"] ) - 1 );
+			}
 		}
-	}
-	public function sendLongPopup(Player $player, $text){
-		$player->sendPopup($text);
-		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 10);
-		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 20);
-		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 30);
-		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 40);
-		$this->getServer()->getScheduler()->scheduleDelayedTask(new LongPopupTask($this, $player, $text), 50);
+		
+		$this->before = $rand;
+		$text = $this->configData ["prefix"] . " " . $this->configData ["announce"] [$rand] . " " . $this->configData ["suffix"];
+		
+		if (isset ( $rand ))
+			if (isset ( $this->configData ["announce"] [$rand] ))
+				$this->announceSystem->pushBroadCastPopup ( $text );
 	}
 	public function replaceColor($text) {
 		for($i = 0; $i <= 9; $i ++)
@@ -163,14 +176,16 @@ class AnnouncePro extends PluginBase implements Listener {
 		$index_key = array_keys ( $target );
 		$full_index = floor ( $index_count / $once_print );
 		
-		if ($index_count > $full_index * $once_print) $full_index ++;
+		if ($index_count > $full_index * $once_print)
+			$full_index ++;
 		
 		if ($index <= $full_index) {
 			$player->sendMessage ( TextFormat::DARK_AQUA . $this->get ( "now-list-show" ) . " ({$index}/{$full_index}) " . $this->get ( "index_count" ) . ": {$index_count}" );
 			$message = null;
 			for($for_i = $once_print; $for_i >= 1; $for_i --) {
 				$now_index = $index * $once_print - $for_i;
-				if (! isset ( $index_key [$now_index] )) break;
+				if (! isset ( $index_key [$now_index] ))
+					break;
 				$now_key = $index_key [$now_index];
 				$message .= TextFormat::DARK_AQUA . "[" . $now_key . "] : " . $target [$now_key] . "\n";
 			}
