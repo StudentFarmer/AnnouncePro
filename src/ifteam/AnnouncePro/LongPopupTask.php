@@ -19,7 +19,7 @@ class LongPopupTask extends Task {
 		$this->player->sendPopup ( $this->string );
 		
 		for($i = 0; $i <= $this->time - 1; $i ++)
-			Server::getInstance ()->getScheduler ()->scheduleDelayedTask ( new PopupTask ( $player, $text ), 10 * $i );
+			Server::getInstance ()->getScheduler ()->scheduleDelayedTask ( new PopupTask ( $this->player, $this->string ), 10 * $i );
 	}
 }
 

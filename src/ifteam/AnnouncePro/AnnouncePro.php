@@ -9,6 +9,7 @@ use pocketmine\command\Command;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat;
 use pocketmine\command\PluginCommand;
+use pocketmine\event\player\PlayerQuitEvent;
 
 class AnnouncePro extends PluginBase implements Listener {
 	public $config, $configData;
@@ -29,8 +30,10 @@ class AnnouncePro extends PluginBase implements Listener {
 		] );
 		$this->configData = $this->config->getAll ();
 		$this->callback = $this->getServer ()->getScheduler ()->scheduleRepeatingTask ( new AnnounceProTask ( $this ), $this->configData ["repeat-second"] * 20 );
+		$this->callback = $this->getServer ()->getScheduler ()->scheduleRepeatingTask ( new PopupProcessTask ( $this ), 10 );
 		
-		$this->announceSystem = new AnnounceSystem ();
+		new AnnounceSystem ();
+		$this->announceSystem = AnnounceSystem::getInstance ();
 		
 		$this->getServer ()->getPluginManager ()->registerEvents ( $this, $this );
 	}
@@ -136,6 +139,17 @@ class AnnouncePro extends PluginBase implements Listener {
 				break;
 		}
 		return true;
+	}
+	public function popupProcess() {
+		foreach ( $this->getServer ()->getOnlinePlayers () as $player ) {
+			$receivedPopup = $this->announceSystem->receivePopup ( $player );
+			if ($receivedPopup !== null)
+				$this->getServer ()->getScheduler ()->scheduleTask ( new LongPopupTask ( $player, $receivedPopup ) );
+		}
+	}
+	public function onPlayerQuitEvent(PlayerQuitEvent $event) {
+		if (isset ( $this->announceSystem->popups [$event->getPlayer ()->getName ()] ))
+			unset ( $this->announceSystem->popups [$event->getPlayer ()->getName ()] );
 	}
 	public function AnnouncePro() {
 		if ($this->configData ["enable"] != true)

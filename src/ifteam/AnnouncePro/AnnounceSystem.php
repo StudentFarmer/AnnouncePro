@@ -83,7 +83,7 @@ class AnnounceSystem {
 		if (count ( $this->popups [$player->getName ()] ) == 0)
 			return null;
 		
-		return ( string ) array_shift ( $this->popups [$player->getName ()] );
+		return array_shift ( $this->popups [$player->getName ()] );
 	}
 }
 
