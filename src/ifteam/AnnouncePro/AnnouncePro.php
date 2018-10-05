@@ -56,7 +56,7 @@ class AnnouncePro extends PluginBase implements Listener {
 		$command->setUsage ( $usage );
 		$commandMap->register ( $fallback, $command );
 	}
-	public function onCommand(CommandSender $player, Command $command, $label, Array $args) {
+	public function onCommand(CommandSender $player, Command $command, $label, Array $args):bool {
 		if (! isset ( $args [0] )) {
 			$this->helpPage ( $player );
 			return true;
